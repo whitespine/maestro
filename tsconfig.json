@@ -5,6 +5,7 @@
         "experimentalDecorators": true,
         "target": "ES2019",
         "types": ["foundry-pc-types"],
-        "outDir": "./out-js"
+        "outDir": "./out-js",
+        "moduleResolution": "node"
     }
 }

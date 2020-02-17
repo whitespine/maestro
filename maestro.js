@@ -5,6 +5,7 @@ import ItemTrack from "./modules/item-track.js";
 import { migrationHandler } from "./modules/migration.js";
 import * as Misc from "./modules/misc.js";
 import { registerModuleSettings } from "./modules/settings.js";
+import YTSound from "./modules/youtube.js";
 
 /**
  * Orchestrates (pun) module functionality
@@ -81,6 +82,7 @@ export default class Conductor {
 
         // Pre-Create Hooks
         Conductor._hookOnPreCreateChatMessage();
+        Conductor._hookOnPreCreatePlaylistSound();
 
         // Pre-update Hooks
         Conductor._hookOnPreUpdatePlaylistSound();
@@ -98,6 +100,15 @@ export default class Conductor {
     }
 
     /**
+     * PreCreate PlaylistSound Hook
+     */
+    static _hookOnPreCreatePlaylistSound() {
+        Hooks.on("preCreatePlaylistSound", (playlist, playlistId, updateData, options) => {
+            YTSound._onPreCreatePlaylistSound(playlist, playlistId, updateData, options);
+        });
+    }
+
+    /**
      * PreUpdate Playlist Hook
      */
     static _hookOnPreUpdatePlaylist() {
@@ -109,8 +120,9 @@ export default class Conductor {
      * PreUpdate Playlist Sound Hook
      */
     static _hookOnPreUpdatePlaylistSound() {
-        Hooks.on("preUpdatePlaylistSound", (playlist, playlistId, update) => {
+        Hooks.on("preUpdatePlaylistSound", (playlist, playlistId, update, options) => {
             Misc._onPreUpdatePlaylistSound(playlist, update);
+            YTSound._onPreUpdatePlaylistSound(playlist, playlistId, update, options)
         });
     }
 
