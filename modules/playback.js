@@ -108,7 +108,7 @@ export function playSoundByName(name, {playlist=null}={}) {
  */
 export function pauseSounds(sounds) {
     if (!sounds) {
-        return;
+        return [];
     }
 
     if (!(sounds instanceof Array)) {
@@ -129,7 +129,7 @@ export function pauseSounds(sounds) {
         }
 
         if (!playlistSound) {
-            return;
+            continue;
         }
         const howl = game.audio.sounds[playlistSound.path].howl;
         // howl.pause();
@@ -160,9 +160,11 @@ export function resumeSounds(sounds) {
 
         // Fade in
         // maybe should only do this if not playing, but it hardly matters
-        howl.volume(0);
-        howl.play();
-        howl.fade(0, sound.volume, FADETIME);
+        if(!howl.playing()) {
+            howl.volume(0);
+            howl.play();
+            howl.fade(0, sound.volume, FADETIME);
+        }
         resumedSounds.push(sound);
     }
 
@@ -170,19 +172,19 @@ export function resumeSounds(sounds) {
 }
 
 /**
- * Pauses all active playlist sounds
+ * Pauses _all_ active playlist sounds
  */
 export function pauseAll() {
     // Find active playlists and sounds and pause them
     const activePlaylists = game.playlists.entities.filter(p => p.playing);
 
-    if (!activePlaylists.length) return;
+    if (!activePlaylists.length) return [];
 
     const activeSounds = activePlaylists.flatMap(p => {
         return p.sounds.filter(s => s.playing);
     });
 
-    if (!activeSounds.length) return;
+    if (!activeSounds.length) return [];
 
     const pausedSounds = pauseSounds(activeSounds);
     return pausedSounds;

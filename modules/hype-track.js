@@ -4,6 +4,7 @@ import * as Playback from "./playback.js";
 export default class HypeTrack {
     constructor() {
         this.playlist = null;
+        // Tracks non-hype audio that is currently paused due to hype tracks
         this.pausedSounds = [];
     }
 
@@ -43,50 +44,52 @@ export default class HypeTrack {
      */
     async _processHype(combat, update) {
         if (!Number.isNumeric(update.turn) || !combat.combatants.length || !this.playlist) {
+            // if no change or no playlist, abort
             return;
         }
+
+        await this.playHype(combat.combatant.actor, {warn: false});
 
         // Stop any active hype tracks
-        if (game.user.isGM && this?.playlist?.playing) {
-            this.playlist.stopAll();
-        }
+        // if (game.user.isGM && this?.playlist?.playing) {
+            // this.playlist.stopAll();
+        // }
 
         // Find the hype track
-        const hypeTrack = this._getActorHypeTrack(combat.combatant.actor);
-        const pauseOthers = game.settings.get(MAESTRO.MODULE_NAME, MAESTRO.SETTINGS_KEYS.HypeTrack.pauseOthers);
+        // const hypeTrack = this._getActorHypeTrack(combat.combatant.actor);
+        // const pauseOthers = game.settings.get(MAESTRO.MODULE_NAME, MAESTRO.SETTINGS_KEYS.HypeTrack.pauseOthers);
 
-        if (!hypeTrack) {
-            if (this.pausedSounds.length) {
+        // if (!hypeTrack) {
+            // if (this.pausedSounds.length) {
                 // Resume any previously paused sounds
-                Playback.resumeSounds(this.pausedSounds);
-                this.pausedSounds = [];
-            }
+                // Playback.resumeSounds(this.pausedSounds);
+                // this.pausedSounds = [];
+            // }
             
-            return;
-        }
+            // return;
+        // }
 
-        if (pauseOthers) {
+        // if (pauseOthers) {
             // pause active playlists
-            this.pausedSounds = Playback.pauseAll();
-        }
+            // this.pausedSounds = Playback.pauseAll();
+        // }
         
 
         // Find the hype track's playlist sound and play it
-        const hypeTrackSound = this.playlist.sounds.find(s => s._id === hypeTrack);
+        // const hypeTrackSound = this.playlist.sounds.find(s => s._id === hypeTrack);
 
-        if (game.user.isGM) {
-            await this.playHype(combat.combatant.actor, {warn: false});
-        }
+        // if (game.user.isGM) {
+        // }
         
-        const howl = game.audio.sounds[hypeTrackSound.path].howl;
+        // const howl = game.audio.sounds[hypeTrackSound.path].howl;
 
-        if (this.pausedSounds.length) {
+        // if (this.pausedSounds.length) {
                 // Defer the resumption of paused sounds after hype track finishes
-            howl.on("end", () => {
-                Playback.resumeSounds(this.pausedSounds);
-                this.pausedSounds = [];
-            });
-        }
+            // howl.on("end", () => {
+                // Playback.resumeSounds(this.pausedSounds);
+                // this.pausedSounds = [];
+            // });
+        // }
     }
     
 
@@ -207,6 +210,10 @@ export default class HypeTrack {
 
         if (!hypeTrack) {
             if (warn) ui.notifications.warn(game.i18n.localize("HYPE-TRACK.PlayHype.NoTrack"));
+
+            // Want to resume other sounds, since there is no hype currently, then leave
+            Playback.resumeSounds(this.pausedSounds);
+            this.pausedSounds = [];
             return;
         }
 
@@ -216,26 +223,30 @@ export default class HypeTrack {
             if (warn) ui.notifications.warn(game.i18n.localize("HYPE-TRACK.PlayHype.NoPlaylist"));
         }
 
-        let pausedSounds = [];
+        // Pause hype tracks first. Don't save them, for fairly obvious reasons
         if (playlist.playing) {
             // get other playing hype sounds and pause them. We do not save these, as we don't want to fade back in by default
             let playing_hypes = playlist.sounds.filter(s => s.playing);
             Playback.pauseSounds(playing_hypes);
         }
 
-        // Pause literally everything
+        // Pause literally everything else if we need to, this time saving
         if (pauseOthers) {
-            pausedSounds = Playback.pauseAll();
+            this.pausedSounds.push(...Playback.pauseAll());
         }
 
+        // Play our track
         const playedTrack = await Playback.playTrack(hypeTrack, playlist.id);
 
-        if (pauseOthers && pausedSounds.length) {
-            const playlistSound = playlist.sounds.find(s => s._id === playedTrack._id);
-            const howl = game.audio.sounds[playlistSound.path].howl;
-
-            howl.on("end", () => Playback.resumeSounds(pausedSounds));
-        }
+        // Upon its completion, if it is not looping, unpause everything.
+        const hypeTrackSound = this.playlist.sounds.find(s => s._id === hypeTrack);
+        const howl = game.audio.sounds[hypeTrackSound.path].howl;
+        howl.on("end", () => {
+            if(!howl.loop()){
+                Playback.resumeSounds(this.pausedSounds);
+                this.pausedSounds = [];
+            }
+        });
 
         return playedTrack;
     }
