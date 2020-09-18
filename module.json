@@ -25,8 +25,8 @@
         "path": "lang/ko.json"
       }
     ],
-    "manifest":"https://raw.githubusercontent.com/death-save/maestro/master/module.json",
-    "download": "https://github.com/death-save/maestro/archive/master.zip",
-    "url": "https://github.com/death-save/maestro"
+    "manifest":"https://raw.githubusercontent.com/whitespine/maestro/master/module.json",
+    "download": "https://github.com/whitespine/maestro/archive/master.zip",
+    "url": "https://github.com/whitespine/maestro"
   }
   
