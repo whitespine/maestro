@@ -216,12 +216,14 @@ export default class HypeTrack {
             if (warn) ui.notifications.warn(game.i18n.localize("HYPE-TRACK.PlayHype.NoPlaylist"));
         }
 
+        let pausedSounds = [];
         if (playlist.playing) {
-            await playlist.stopAll();
+            // get other playing hype sounds and pause them. We do not save these, as we don't want to fade back in by default
+            let playing_hypes = playlist.sounds.filter(s => s.playing);
+            Playback.pauseSounds(playing_hypes);
         }
 
-        let pausedSounds = [];
-
+        // Pause literally everything
         if (pauseOthers) {
             pausedSounds = Playback.pauseAll();
         }

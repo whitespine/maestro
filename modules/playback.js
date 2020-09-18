@@ -1,5 +1,6 @@
 import * as MAESTRO from "./config.js";
 
+const FADETIME = 2000;
 
 /**
 * Get all the sounds in a specific playlist
@@ -131,7 +132,12 @@ export function pauseSounds(sounds) {
             return;
         }
         const howl = game.audio.sounds[playlistSound.path].howl;
-        howl.pause();
+        // howl.pause();
+        // Only do this if still playing
+        if(howl.playing()) {
+            howl.fade(sound.volume, 0, FADETIME); // We use the howl's volume just in case it's already been ducked somehow. Going to zero anyways
+            setTimeout(() => howl.pause(), FADETIME); // Pause at the end
+        }
         pausedSounds.push(playlistSound);
     }
 
@@ -152,7 +158,11 @@ export function resumeSounds(sounds) {
     for (const sound of sounds) {
         const howl = game.audio.sounds[sound.path].howl;
 
+        // Fade in
+        // maybe should only do this if not playing, but it hardly matters
+        howl.volume(0);
         howl.play();
+        howl.fade(0, sound.volume, FADETIME);
         resumedSounds.push(sound);
     }
 
